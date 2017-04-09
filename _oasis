@@ -1,0 +1,26 @@
+OASISFormat:   0.4
+BuildTools:    ocamlbuild
+Plugins:       META (0.4), StdFiles (0.4), DevFiles (0.4)
+Name:          yas3cmd
+Version:       0.0.1
+Synopsis:      Yet another s3cmd
+Authors:       Brian Caine
+License:       GPL
+OCamlVersion:  >= 4.01
+AlphaFeatures: ocamlbuild_more_args
+XOCamlbuildPluginTags:  package(bisect_ppx.ocamlbuild)
+
+Library "s3"
+  Path: src/s3/
+  Modules: S3
+  BuildDepends: threads, core, ppx_deriving, ppx_fields_conv, ppx_sexp_conv, cohttp, base64, nocrypto
+
+Executable "yas3cmd"
+  Path: src/tools/
+  MainIs: yas3cmd.ml
+  BuildDepends: core, s3
+
+Executable "s3_test"
+  Path: test/
+  MainIs: s3_test.ml
+  BuildDepends: s3, oUnit, oUnit.advanced, oUnit.threads
