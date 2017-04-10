@@ -13,7 +13,7 @@ XOCamlbuildPluginTags:  package(bisect_ppx.ocamlbuild)
 Library "s3"
   Path: src/s3/
   Modules: S3
-  BuildDepends: threads, core, ppx_deriving, ppx_fields_conv, ppx_sexp_conv, cohttp, base64, nocrypto
+  BuildDepends: threads, core, ppx_deriving, ppx_fields_conv, ppx_sexp_conv, cohttp, base64, nocrypto, str
 
 Executable "yas3cmd"
   Path: src/tools/

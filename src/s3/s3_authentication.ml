@@ -37,19 +37,60 @@ let header_value_exn name req exn =
   | None       -> raise exn
   | Some value -> value
 
+type canonicalization_state = {
+  finished : (string * string) list;
+  last     : (string * string) option;
+} [@@deriving sexp]
+
+let canonicalization_to_list { finished; last; } =
+  finished @
+  (if last = None
+   then []
+   else [Option.value_exn last])
+
+let fold_multiline_header (key, value) =
+  key,
+  Str.global_replace (Str.regexp "[\t ]*\n[\t ]*") " " value
+
+let merge_amz_headers state header =
+  let (key, value) = header in
+  match state.last with
+  | Some (last_key, last_value) ->
+     if last_key = key
+     then {
+       state with
+       last = Some (last_key, last_value ^ "," ^ value)
+     }
+     else {
+       finished = state.finished @ [Option.value_exn state.last];
+       last = Some header;
+     }
+  | None -> { state with last = Some header; }
+
 let canonicalized_amz_headers req =
-  fprintf stderr "DEBUG: Not finished yet\n%!";
-  "" (* debug finish *)
+  Request.headers req
+  |> Header.to_list
+  |> List.map    ~f:(fun (name, value) -> String.lowercase name, value)
+  |> List.filter ~f:(fun (name, _) ->
+                     String.is_prefix ~prefix:"x-amz" name &&
+                     name <> "x-amz-date")
+  |> List.map    ~f:fold_multiline_header
+  |> List.fold   ~init:{ finished = []; last = None; }
+                 ~f:merge_amz_headers
+  |> canonicalization_to_list
+  |> List.map    ~f:(fun (key, value) -> key ^ ":" ^ value ^ "\n")
+  |> String.concat
 
 let canonicalized_resource req =
 
   let acc_prefix =
     let host       = header_value_exn "host" req InvalidHost in
+    let host_uri   = Uri.of_string ("http://" ^ host) in
     let host_parts = String.(lowercase host |> String.split ~on:'.') in
     match host_parts with
-    | [              "s3"; "amazonaws"; "com";] -> ""
     | [virtual_host; "s3"; "amazonaws"; "com";] -> "/" ^ virtual_host
-    | _                                         -> raise InvalidHost in
+    | [              "s3"; "amazonaws"; "com";] -> ""
+    | _ -> "/" ^ (Uri.host_with_default host_uri) in
 
   let resource_path = Request.uri req |> Uri.path in
 
@@ -67,11 +108,20 @@ let canonicalized_resource req =
     ()
   |> Uri.to_string
 
+let request_date req =
+  let headers = Request.headers req in
+  match Header.get headers "x-amz-date" with
+  | Some value -> value
+  | None ->
+     match Header.get headers "date" with
+     | Some value -> value
+     | None -> raise MissingDate
+
 let string_to_sign req =
   (Request.meth req |> Code.string_of_method)       ^ "\n" ^
   (header_value_opt "Content-MD5"  req)             ^ "\n" ^
   (header_value_opt "Content-Type" req)             ^ "\n" ^
-  (header_value_exn "Date"         req MissingDate) ^ "\n" ^
+  (request_date req)                                ^ "\n" ^
   canonicalized_amz_headers req ^
   canonicalized_resource req
 
