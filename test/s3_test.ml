@@ -149,8 +149,38 @@ module Authentication = struct
 
 end
 
+module Bucket = struct
+
+  let test_name name valid =
+    let msg = sprintf "Bucket name \"%s\" is %s"
+                      name
+                      (if valid then "valid" else "invalid") in
+    msg >::
+      fun ctxt ->
+      assert_equal ~ctxt ~msg valid (S3.Bucket.Name.is_valid name)
+
+  let test =
+    "Bucket" >:::
+      [
+        "Names" >:::
+          [test_name "foo" true;
+           test_name (String.make 63 'a') true;
+           test_name (String.make 64 'a') false;
+           test_name ".foo" false;
+           test_name "foo." false;
+           test_name "foo.doo" true;
+           test_name "foo..doo" false;
+           test_name "192.168.5.4" false;
+           test_name "foo-doo" true;
+          ]
+      ]
+
+end
+
 let test =
   "S3" >:::
-    [Authentication.test]
+    [Authentication.test;
+     Bucket.test;
+    ]
 
 let () = run_test_tt_main test
