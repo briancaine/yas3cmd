@@ -1,0 +1,78 @@
+# OASIS_START
+# DO NOT EDIT (digest: 459f9628bb086427be3e7032353e7bb6)
+# Ignore VCS directories, you can use the same kind of rule outside
+# OASIS_START/STOP if you want to exclude directories that contains
+# useless stuff for the build process
+true: annot, bin_annot
+<**/.svn>: -traverse
+<**/.svn>: not_hygienic
+".bzr": -traverse
+".bzr": not_hygienic
+".hg": -traverse
+".hg": not_hygienic
+".git": -traverse
+".git": not_hygienic
+"_darcs": -traverse
+"_darcs": not_hygienic
+# Library s3
+"src/s3/s3.cmxs": use_s3
+<src/s3/*.ml{,i,y}>: package(base64)
+<src/s3/*.ml{,i,y}>: package(cohttp)
+<src/s3/*.ml{,i,y}>: package(core)
+<src/s3/*.ml{,i,y}>: package(nocrypto)
+<src/s3/*.ml{,i,y}>: package(ppx_deriving)
+<src/s3/*.ml{,i,y}>: package(ppx_fields_conv)
+<src/s3/*.ml{,i,y}>: package(ppx_sexp_conv)
+<src/s3/*.ml{,i,y}>: package(str)
+<src/s3/*.ml{,i,y}>: package(threads)
+# Executable yas3cmd
+"src/tools/yas3cmd.byte": package(base64)
+"src/tools/yas3cmd.byte": package(cohttp)
+"src/tools/yas3cmd.byte": package(core)
+"src/tools/yas3cmd.byte": package(nocrypto)
+"src/tools/yas3cmd.byte": package(ppx_deriving)
+"src/tools/yas3cmd.byte": package(ppx_fields_conv)
+"src/tools/yas3cmd.byte": package(ppx_sexp_conv)
+"src/tools/yas3cmd.byte": package(str)
+"src/tools/yas3cmd.byte": package(threads)
+"src/tools/yas3cmd.byte": use_s3
+<src/tools/*.ml{,i,y}>: package(base64)
+<src/tools/*.ml{,i,y}>: package(cohttp)
+<src/tools/*.ml{,i,y}>: package(core)
+<src/tools/*.ml{,i,y}>: package(nocrypto)
+<src/tools/*.ml{,i,y}>: package(ppx_deriving)
+<src/tools/*.ml{,i,y}>: package(ppx_fields_conv)
+<src/tools/*.ml{,i,y}>: package(ppx_sexp_conv)
+<src/tools/*.ml{,i,y}>: package(str)
+<src/tools/*.ml{,i,y}>: package(threads)
+<src/tools/*.ml{,i,y}>: use_s3
+# Executable s3_test
+"test/s3_test.byte": package(base64)
+"test/s3_test.byte": package(cohttp)
+"test/s3_test.byte": package(core)
+"test/s3_test.byte": package(nocrypto)
+"test/s3_test.byte": package(oUnit)
+"test/s3_test.byte": package(oUnit.advanced)
+"test/s3_test.byte": package(oUnit.threads)
+"test/s3_test.byte": package(ppx_deriving)
+"test/s3_test.byte": package(ppx_fields_conv)
+"test/s3_test.byte": package(ppx_sexp_conv)
+"test/s3_test.byte": package(str)
+"test/s3_test.byte": package(threads)
+"test/s3_test.byte": use_s3
+<test/*.ml{,i,y}>: package(base64)
+<test/*.ml{,i,y}>: package(cohttp)
+<test/*.ml{,i,y}>: package(core)
+<test/*.ml{,i,y}>: package(nocrypto)
+<test/*.ml{,i,y}>: package(oUnit)
+<test/*.ml{,i,y}>: package(oUnit.advanced)
+<test/*.ml{,i,y}>: package(oUnit.threads)
+<test/*.ml{,i,y}>: package(ppx_deriving)
+<test/*.ml{,i,y}>: package(ppx_fields_conv)
+<test/*.ml{,i,y}>: package(ppx_sexp_conv)
+<test/*.ml{,i,y}>: package(str)
+<test/*.ml{,i,y}>: package(threads)
+<test/*.ml{,i,y}>: use_s3
+# OASIS_STOP
+<src/**>: coverage
+<test/*.{byte,native}>: coverage

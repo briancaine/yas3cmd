@@ -171,7 +171,20 @@ module Bucket = struct
            test_name "foo.doo" true;
            test_name "foo..doo" false;
            test_name "192.168.5.4" false;
-           test_name "foo-doo" true;
+           test_name "foo-doo.o.o.o.o.o.o.o.o" true;
+
+           ("To/From string" >::
+              fun ctxt ->
+              assert_equal ~ctxt ~msg:"of_string"
+                           "foo"
+                           S3.Bucket.Name.(of_string "foo" |> to_string));
+           ("To/From string (failure)" >::
+              fun ctxt ->
+              assert_raises ~msg:"Bad name conversion"
+                            (S3.Bucket.InvalidBucketName "foo..bar")
+                            (fun () ->
+                             S3.Bucket.Name.(
+                               of_string "foo..bar" |> to_string)));
           ]
       ]
 

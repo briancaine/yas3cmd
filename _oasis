@@ -24,3 +24,9 @@ Executable "s3_test"
   Path: test/
   MainIs: s3_test.ml
   BuildDepends: s3, oUnit, oUnit.advanced, oUnit.threads
+
+Test "s3_test"
+  Run$: flag(tests) && flag(s3)
+  TestTools: s3_test
+  Command: $s3_test
+  WorkingDirectory: test
