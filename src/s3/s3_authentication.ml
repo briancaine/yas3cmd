@@ -30,13 +30,6 @@ let header_value_opt name req =
   |> fun headers -> Header.get headers name
   |> Option.value ~default:""
 
-let header_value_exn name req exn =
-  Request.headers req
-  |> fun headers ->
-  match Header.get headers name with
-  | None       -> raise exn
-  | Some value -> value
-
 type canonicalization_state = {
   finished : (string * string) list;
   last     : (string * string) option;
@@ -84,7 +77,8 @@ let canonicalized_amz_headers req =
 let canonicalized_resource req =
 
   let acc_prefix =
-    let host       = header_value_exn "host" req InvalidHost in
+    let host       = Header.get (Request.headers req) "host"
+                     |> Option.value ~default:"" in
     let host_uri   = Uri.of_string ("http://" ^ host) in
     let host_parts = String.(lowercase host |> String.split ~on:'.') in
     match host_parts with
@@ -103,7 +97,7 @@ let canonicalized_resource req =
          ~cmp:(fun (a_name, _) (b_name, _) -> String.compare a_name b_name) in
 
   Uri.make
-    ~path:(acc_prefix ^ (if resource_path = "" then "/" else resource_path))
+    ~path:(acc_prefix ^ resource_path)
     ~query
     ()
   |> Uri.to_string

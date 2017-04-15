@@ -32,7 +32,6 @@ module Authentication = struct
   let test =
     "Authentication" >:::
       [
-
         authenticate_req
          (Request.make
             ~meth:`GET
@@ -144,6 +143,63 @@ module Authentication = struct
                 "/dictionary/fran%C3%A7ais/pr%c3%a9f%c3%a8re")))
 
          "AWS AKIAIOSFODNN7EXAMPLE:81VEw/Bc3GDt/k65Xrrk3AdfI4c=";
+
+       (* misc tests to get code coverage *)
+
+       ("Authorization already exists" >::
+          fun ctxt ->
+          assert_raises ~msg:"Authorization already exists"
+                        S3.Authentication.AlreadyAuthenticated
+                        (fun () ->
+                         S3.Authentication.authenticate
+                           (Request.make
+                              ~meth:`GET
+                              ~version:`HTTP_1_1
+                              ~headers:(
+                                Header.of_list [
+                                    "Authorization", "fff";
+                                    "Date", "date";
+                                    "x-amz-foo", "fff";
+                                    "x-amz-foo", "aaa";
+                                    "x-amz-foo", "rrr";
+                                  ])
+                              (Uri.of_string "/foo?acl=foo&location=bar"))
+                        ~access_key_id ~secret_access_key));
+
+       ("Missing date" >::
+          fun ctxt ->
+          assert_raises ~msg:"Date missing"
+                        S3.Authentication.MissingDate
+                        (fun () ->
+                         S3.Authentication.authenticate
+                           (Request.make
+                              ~meth:`GET
+                              ~version:`HTTP_1_1
+                              ~headers:(
+                                Header.of_list [
+                                    "x-amz-foo", "fff";
+                                    "x-amz-foo", "aaa";
+                                    "x-amz-foo", "rrr";
+                                  ])
+                              (Uri.of_string "/foo?acl=foo&location=bar"))
+                        ~access_key_id ~secret_access_key));
+
+(*
+       authenticate_req
+         (Request.make
+            ~meth:`GET
+            ~version:`HTTP_1_1
+            ~headers:(
+              Header.of_list
+                ["Date", "Wed, 28 Mar 2007 01:49:49 +0000";
+                 
+])
+            (Uri.of_string
+               ("https://s3.amazonaws.com" ^
+                "/dictionary/fran%C3%A7ais/pr%c3%a9f%c3%a8re")))
+
+         "AWS AKIAIOSFODNN7EXAMPLE:81VEw/Bc3GDt/k65Xrrk3AdfI4c=";
+ *)
 
       ]
 
