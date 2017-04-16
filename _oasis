@@ -18,7 +18,7 @@ Library "s3"
 Executable "yas3cmd"
   Path: src/tools/
   MainIs: yas3cmd.ml
-  BuildDepends: core, s3, cmdliner
+  BuildDepends: core, s3, cmdliner, sexplib, lwt, lwt.ppx, cohttp, cohttp.lwt
 
 Executable "s3_test"
   Path: test/
