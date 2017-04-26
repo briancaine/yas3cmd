@@ -92,7 +92,9 @@ let canonicalized_resource req =
     Request.uri req
     |> Uri.query
     |> List.filter
-         ~f:(fun (arg_name, _) -> List.mem canonical_subresources arg_name)
+         ~f:(fun (arg_name, _) ->
+             String.lowercase arg_name |>
+               List.mem canonical_subresources)
     |> List.sort
          ~cmp:(fun (a_name, _) (b_name, _) -> String.compare a_name b_name) in
 

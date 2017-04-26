@@ -6,7 +6,7 @@ let program = Conf.make_exec "s3_test"
 
 module Authentication = struct
 
-  (* taken from
+  (* some of the are taken from
      https://docs.aws.amazon.com/AmazonS3/latest/dev/RESTAuthentication.html
    *)
 

@@ -1,7 +1,7 @@
 # OCaml version to install
 export OCAML_VERSION=4.03.0
 # OPAM packages needed to build tests
-export OPAM_PACKAGES='ocamlfind ounit oasis core ppx_deriving ppx_fields_conv ppx_sexp_conv cohttp base64 nocrypto oasis bisect_ppx ocveralls lwt'
+export OPAM_PACKAGES='ocamlfind ounit oasis core ppx_deriving ppx_fields_conv ppx_sexp_conv cohttp base64 nocrypto oasis bisect_ppx ocveralls lwt xml-light'
 
 # install ocaml from apt
 #sudo add-apt-repository --yes ppa:avsm/ppa

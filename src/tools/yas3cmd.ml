@@ -1,5 +1,4 @@
 open Printf
-
 open Cmdliner
 
 let help_secs = [
@@ -15,4 +14,5 @@ let default_cmd =
 
 let cmds = [Yas3cmd_put.cmd;]
 
-let () = Term.(exit @@ eval_choice default_cmd cmds)
+let () =
+  Term.(exit @@ eval_choice default_cmd cmds)
