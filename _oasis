@@ -28,5 +28,5 @@ Executable "s3_test"
 Test "s3_test"
   Run$: flag(tests)
   TestTools: s3_test
-  Command: $s3_test
+  Command: $s3_test -runner sequential
   WorkingDirectory: .
