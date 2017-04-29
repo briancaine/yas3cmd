@@ -78,8 +78,8 @@ let simple_put { access_key_id; secret_access_key; } source target =
   let body = Cohttp_lwt_body.of_stream input_stream in
 
   Lwt_main.run
-    (let%lwt (response, body) =
-       Cohttp_lwt_unix.Client.put
+    (let%lwt (response, body, _) =
+       S3.Cohttp_lwt_unix.Client.put
          ~body
          ~headers
          request_uri in
@@ -93,7 +93,8 @@ let simple_put { access_key_id; secret_access_key; } source target =
         fprintf stderr "%s\n"
                 (Response.sexp_of_t response
                  |> Sexplib.Sexp.to_string_hum ~indent:2);
-        fprintf stderr "%s\n" body_contents) ;
+        fprintf stderr "%s\n" body_contents;
+        failwith "Failed to PUT object.") ;
 
      Lwt.return ())
 
@@ -154,11 +155,10 @@ let update_written_put_state put_state =
                          |> fun sexp -> Sexp.to_string_hum sexp in
   let put_state_string = put_state_string ^ "\n" in
   let temp_filename = put_state.state_filename ^ ".temp" in
-  let desc = Unix.(openfile ~mode:[O_WRONLY; O_CREAT; O_EXCL;]
-                            temp_filename) in
-  if (Unix.single_write ~buf:put_state_string desc) = 0
-  then failwith "Failed to write state, bailing.\n" ;
-  Unix.close desc;
+  Out_channel.(with_file temp_filename
+                         ~f:(fun oc ->
+                             output_string oc put_state_string;
+                             flush oc));
   Unix.rename temp_filename put_state.state_filename
 
 let finish_complex_put auth put_state source target =
@@ -207,8 +207,8 @@ let finish_complex_put auth put_state source target =
            "</CompleteMultipartUpload>") in
 
   Lwt_main.run
-    (let%lwt (response, body) =
-       Cohttp_lwt_unix.Client.post
+    (let%lwt (response, body, _) =
+       S3.Cohttp_lwt_unix.Client.post
          ~body
          ~headers
          request_uri in
@@ -254,6 +254,7 @@ let continue_complex_put auth put_state source target =
     iter start in
 
   let upload_thread local_part_num =
+
     let remote_part_num = local_part_num + 1 in
     let%lwt data =
       let%lwt source = Lwt_unix.(openfile source [O_RDONLY] 0o640) in
@@ -277,7 +278,7 @@ let continue_complex_put auth put_state source target =
     let target = Uri.of_string target in
 
     let request_uri =
-      Uri.make ~scheme:"https"
+      Uri.make ~scheme:"http"
                ~host:(Uri.host_with_default target ^ ".s3.amazonaws.com")
                ~path:(Uri.path target ^ source)
                ~query:["partNumber", [Int.to_string remote_part_num];
@@ -310,8 +311,8 @@ let continue_complex_put auth put_state source target =
     let headers = Request.headers request in
 
     let body = Cohttp_lwt_body.of_string data in
-    let%lwt (response, body) =
-      Cohttp_lwt_unix.Client.put ~body ~headers request_uri in
+    let%lwt (response, body, _) =
+      S3.Cohttp_lwt_unix.Client.put ~body ~headers request_uri in
 
     let%lwt body_contents = Cohttp_lwt_body.to_string body in
 
@@ -347,6 +348,7 @@ let continue_complex_put auth put_state source target =
   in
 
   let rec main put_state threads =
+
     if threads = []
     then Lwt.return ()
     else (
@@ -407,8 +409,8 @@ let initiate_multipart_put auth put_opts source target =
   let headers = Request.headers request in
 
   Lwt_main.run
-    (let%lwt (response, body) =
-       Cohttp_lwt_unix.Client.post
+    (let%lwt (response, body, _) =
+       S3.Cohttp_lwt_unix.Client.post
          ~headers
          request_uri in
 
@@ -423,7 +425,9 @@ let initiate_multipart_put auth put_opts source target =
 
 let grab_state_or_init auth put_opts source target =
   let state_filename = Option.value_exn put_opts.state_filename in
+(*
   try
+ *)
     let input = open_in state_filename in
     let res   = Sexp.input_sexp input
                 |> complex_put_state_of_sexp in
@@ -432,11 +436,13 @@ let grab_state_or_init auth put_opts source target =
       res with
       pieces_in_progress = Set.Poly.empty;
     }
+(*
   with
   | _ ->
     let res = initiate_multipart_put auth put_opts source target in
     update_written_put_state res ;
     res
+ *)
 
 let put auth put_opts source target =
   if put_opts.state_filename = None
@@ -462,7 +468,7 @@ let make_put_opts state_filename =
   { state_filename; }
 
 let put_opts =
-  
+
   let state_file =
     let doc = "File in which to store Put state " ^
               "(so that it may be resumed later)" in
