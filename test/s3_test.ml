@@ -25,8 +25,10 @@ module Authentication = struct
       fun ctxt ->
       let msg = sprintf "Failed to authentication request: %s"
                         (req_as_string req) in
-      let req = S3.Authentication.authenticate
-                  req ~access_key_id ~secret_access_key in
+      let req = S3.Authentication.(
+          authenticate
+            req
+            AccessKey.{ id = access_key_id; secret = secret_access_key; }) in
       assert_equal ~ctxt ~msg auth
                    Request.(Header.get req.headers "Authorization"
                             |> Option.value ~default:"")
@@ -153,20 +155,24 @@ module Authentication = struct
           assert_raises ~msg:"Authorization already exists"
                         S3.Authentication.AlreadyAuthenticated
                         (fun () ->
-                         S3.Authentication.authenticate
-                           (Request.make
-                              ~meth:`GET
-                              ~version:`HTTP_1_1
-                              ~headers:(
-                                Header.of_list [
+                         S3.Authentication.(
+                           authenticate
+                             (Request.make
+                                ~meth:`GET
+                                ~version:`HTTP_1_1
+                                ~headers:(
+                                  Header.of_list [
                                     "Authorization", "fff";
                                     "Date", "date";
                                     "x-amz-foo", "fff";
                                     "x-amz-foo", "aaa";
                                     "x-amz-foo", "rrr";
-                                  ])
-                              (Uri.of_string "/foo?acl=foo&location=bar"))
-                        ~access_key_id ~secret_access_key));
+                                    ])
+                                (Uri.of_string "/foo?acl=foo&location=bar"))
+                             AccessKey.{
+                             id = access_key_id;
+                             secret = secret_access_key;
+                           } )));
 
        ("Missing date" >::
           fun ctxt ->
@@ -184,7 +190,10 @@ module Authentication = struct
                                     "x-amz-foo", "rrr";
                                   ])
                               (Uri.of_string "/foo?acl=foo&location=bar"))
-                        ~access_key_id ~secret_access_key));
+                        S3.Authentication.AccessKey.{
+                           id = access_key_id;
+                           secret = secret_access_key;
+                         }));
 
 (*
        authenticate_req

@@ -37,3 +37,8 @@ let secret_access_key =
 
 let copts_t =
   Term.(const make_authentication $ access_key_id $ secret_access_key)
+
+let split_s3_uri uri =
+  let open S3 in
+  Uri.host_with_default uri |> Bucket.Name.of_string,
+  Uri.path uri |> Object.Name.of_string

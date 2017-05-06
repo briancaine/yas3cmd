@@ -58,5 +58,5 @@ module Cohttp_lwt_body = struct
            let%lwt () = Lwt_io.close ic in
            Lwt.fail exc in
 
-    Lwt_stream.from get_next |> Lwt.return
+    Lwt_stream.from get_next |> of_stream |> Lwt.return
 end

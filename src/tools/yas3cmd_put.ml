@@ -23,18 +23,34 @@ let simple_put { access_key_id; secret_access_key; } source target =
   let access_key_id = Option.value_exn access_key_id in
   let secret_access_key = Option.value_exn secret_access_key in
 
+  let source_stat = Unix.stat source in
+
+  if Unix.(source_stat.st_size) >= max_put_size
+  then raise FileTooLarge ;
+
+  let open S3 in
+  let open S3.Misc in
+
+  let access_key = Authentication.AccessKey.{
+      id     = access_key_id;
+      secret = secret_access_key;
+    } in
+
   let target = Uri.of_string target in
 
+  let bucket_name = Uri.host_with_default target |> Bucket.Name.of_string in
+  let object_name = Uri.path target ^ source |> Object.Name.of_string in
+
+  let%lwt data    = Cohttp_lwt_body.of_filename source in
+
+  Object.put ~access_key ~bucket_name ~object_name data
+
+(*
   let request_uri =
     Uri.make ~scheme:"https"
              ~host:(Uri.host_with_default target ^ ".s3.amazonaws.com")
              ~path:(Uri.path target ^ source)
              () in
-
-  let source_stat = Unix.stat source in
-
-  if Unix.(source_stat.st_size) >= max_put_size
-  then raise FileTooLarge ;
 
   let content_md5 = Digest.(file source)
                     |> Cstruct.of_string
@@ -97,6 +113,7 @@ let simple_put { access_key_id; secret_access_key; } source target =
         failwith "Failed to PUT object.") ;
 
      Lwt.return ())
+ *)
 
 type piece_success = {
   number : int;
@@ -186,9 +203,13 @@ let finish_complex_put auth put_state source target =
                                     ~zone:Core.Zone.utc);
                      ])
                  request_uri in
-  let request = S3.Authentication.authenticate
-                  ~access_key_id ~secret_access_key
-                  request in
+  let request = S3.Authentication.(
+      authenticate
+        request
+        AccessKey.{
+        id = access_key_id;
+        secret = secret_access_key;
+      }) in
   let headers = Request.headers request in
 
   let sum_multipart_upload ~key ~data thus_far =
@@ -305,9 +326,11 @@ let continue_complex_put auth put_state source target =
                          "Content-MD5", content_md5;
                        ])
                    request_uri in
-    let request = S3.Authentication.authenticate
-                    ~access_key_id ~secret_access_key
-                    request in
+    let request = S3.Authentication.(
+        authenticate
+          request
+          AccessKey.{ id = access_key_id; secret = secret_access_key; }
+      ) in
     let headers = Request.headers request in
 
     let body = Cohttp_lwt_body.of_string data in
@@ -403,9 +426,11 @@ let initiate_multipart_put auth put_opts source target =
                                     ~zone:Core.Zone.utc);
                      ])
                  request_uri in
-  let request = S3.Authentication.authenticate
-                  ~access_key_id ~secret_access_key
-                  request in
+  let request = S3.Authentication.(
+      authenticate
+        request
+        AccessKey.{ id = access_key_id; secret = secret_access_key; }
+    ) in
   let headers = Request.headers request in
 
   Lwt_main.run
@@ -446,7 +471,7 @@ let grab_state_or_init auth put_opts source target =
 
 let put auth put_opts source target =
   if put_opts.state_filename = None
-  then simple_put auth source target
+  then Lwt_main.run (simple_put auth source target)
   else
     (try
         (continue_complex_put auth

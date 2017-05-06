@@ -39,4 +39,9 @@ module Name = struct
     item
 
   let to_string (item : t) = item
+
+  let to_https_uri t =
+    Uri.make ~scheme:"https"
+             ~host:(t ^ ".s3.amazonaws.com")
+             ()
 end

@@ -121,7 +121,18 @@ let string_to_sign req =
   canonicalized_amz_headers req ^
   canonicalized_resource req
 
-let authenticate req ~access_key_id ~secret_access_key =
+module AccessKey = struct
+  type t = {
+    id     : string;
+    secret : string;
+  } [@@deriving sexp]
+end
+
+let authenticate req access_key =
+  let open AccessKey in
+  let access_key_id     = access_key.id in
+  let secret_access_key = access_key.secret in
+
   if   Request.(Header.get req.headers) "Authorization" <> None
   then raise AlreadyAuthenticated ;
 
