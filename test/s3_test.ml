@@ -2,7 +2,7 @@ open OUnit2
 open Printf
 open Core.Std
 
-open S3.Misc
+open S3.Misc.Infix
 
 let program = Conf.make_exec "s3_test"
 

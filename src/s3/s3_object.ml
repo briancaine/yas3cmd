@@ -11,7 +11,8 @@ type put_exception = {
 
 exception PutFailure of put_exception
 
-open S3_misc
+open S3_overrides
+open S3_misc.Infix
 
 module Name = struct
   type t = string

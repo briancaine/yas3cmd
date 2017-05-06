@@ -2,7 +2,7 @@ open Core.Std
 
 exception InvalidBucketName of string
 
-open S3_misc
+open S3_overrides
 
 module Name = struct
   type t = string

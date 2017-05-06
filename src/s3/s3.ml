@@ -7,3 +7,4 @@ module Cohttp_lwt = S3_cohttp_lwt
 module Cohttp_lwt_unix = S3_cohttp_lwt_unix
 
 module Misc = S3_misc
+module Overrides = S3_overrides

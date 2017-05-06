@@ -29,7 +29,7 @@ let simple_put { access_key_id; secret_access_key; } source target =
   then raise FileTooLarge ;
 
   let open S3 in
-  let open S3.Misc in
+  let open Overrides in
 
   let access_key = Authentication.AccessKey.{
       id     = access_key_id;
