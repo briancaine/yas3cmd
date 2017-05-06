@@ -10,3 +10,5 @@ module Cohttp_lwt_unix = struct
     let custom_ctx = Cohttp_lwt_unix_net.init
   end
 end
+
+module Misc = S3_misc
