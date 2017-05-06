@@ -2,6 +2,8 @@ open OUnit2
 open Printf
 open Core.Std
 
+open S3.Misc
+
 let program = Conf.make_exec "s3_test"
 
 module Authentication = struct
@@ -246,10 +248,98 @@ module Bucket = struct
 
 end
 
+module Object = struct
+
+  let test_name_valid name valid =
+    let msg = sprintf "Object name \"%s\" is %s"
+                      name
+                      (if valid then "valid" else "invalid") in
+    msg >::
+      fun ctxt ->
+      assert_equal ~ctxt ~msg valid (S3.Object.Name.is_valid name)
+
+  let test_name_special name special =
+    let msg = sprintf "Object name \"%s\" %s special handling"
+                      name
+                      (if special then "requires" else "doesn't require") in
+    msg >::
+      fun ctxt ->
+      assert_equal ~ctxt ~msg
+                   special
+                   (S3.Object.Name.needs_special_handling name)
+
+  let test_name_avoid name avoid =
+    let msg = sprintf "Object name \"%s\" %s to be avoided"
+                      name
+                      (if avoid then "needs" else "doesn't need") in
+    msg >::
+      fun ctxt ->
+      assert_equal ~ctxt ~msg avoid (S3.Object.Name.should_be_avoided name)
+
+  (*
+    https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html
+   *)
+
+  let test =
+    "Object" >:::
+      [
+        "Names" >:::
+          [
+            test_name_valid "" true;
+            test_name_valid "a" true;
+            test_name_valid (String.make 1024 'a') true;
+            test_name_valid (String.make 1025 'a') false;
+
+            test_name_special "foo" false;
+          ] @ (
+          List.map
+            ~f:(fun char -> test_name_special (String.of_char char) true)
+            ([
+              '&';
+              '$';
+              '@';
+              '=';
+              ';';
+              ':';
+              '+';
+              ' ';
+              ',';
+              '?';
+            ] @
+               (List.map ~f:Char.of_int_exn ((0 -- 31) @ [127])))
+        ) @ [
+            test_name_avoid "bar" false;
+          ] @ (
+            List.map
+            ~f:(fun char -> test_name_avoid (String.of_char char) true)
+            ([
+              '\\';
+              '{';
+              '^';
+              '}';
+              '%';
+              '`';
+              ']';
+              '"';
+              '\'';
+              '>';
+              '[';
+              '~';
+              '<';
+              '#';
+              '|';
+            ] @
+               (List.map ~f:Char.of_int_exn (128 -- 255)))
+          )
+      ]
+
+end
+
 let test =
   "S3" >:::
     [Authentication.test;
      Bucket.test;
+     Object.test;
     ]
 
 let () = run_test_tt_main test
