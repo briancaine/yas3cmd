@@ -8,12 +8,12 @@ Authors:       Brian Caine
 License:       GPL
 OCamlVersion:  >= 4.01
 AlphaFeatures: ocamlbuild_more_args
-XOCamlbuildPluginTags:  package(bisect_ppx.ocamlbuild)
+XOCamlbuildPluginTags:  package(bisect_ppx-ocamlbuild)
 
 Library "s3"
   Path: src/s3/
   Modules: S3
-  BuildDepends: threads, core, ppx_deriving, ppx_fields_conv, ppx_sexp_conv, cohttp, lwt, lwt.ppx, cohttp.lwt, base64, nocrypto, str
+  BuildDepends: threads, core, ppx_deriving, ppx_fields_conv, ppx_sexp_conv, cohttp, lwt, lwt.ppx, cohttp.lwt, base64, nocrypto, str, ssl
 
 Executable "yas3cmd"
   Path: src/tools/
